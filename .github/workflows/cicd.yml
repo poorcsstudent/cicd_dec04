@@ -48,7 +48,6 @@ jobs:
           path: ./sites
 
   Deploy:
-    needs: run-tests
     runs-on: ubuntu-latest
     permissions:
       pages: write
@@ -68,17 +67,18 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Generate coverage HTML (htmlcov)
+      - name: Run tests and generate coverage
         run: |
           pytest -q --cov=. --cov-report=term --cov-report=xml --cov-report=html
 
-      - name: Upload Pages artifact (htmlcov)
+      - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: htmlcov
 
       - name: Deploy to GitHub Pages
         uses: actions/deploy-pages@v4
+
 
 
     
