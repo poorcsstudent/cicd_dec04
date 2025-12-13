@@ -53,7 +53,25 @@ jobs:
     permissions:
       pages: write
       id-token: write
+
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Generate coverage HTML (htmlcov)
+        run: |
+          pytest -q --cov=. --cov-report=term --cov-report=xml --cov-report=html
+
       - name: Upload Pages artifact (htmlcov)
         uses: actions/upload-pages-artifact@v3
         with:
@@ -61,6 +79,7 @@ jobs:
 
       - name: Deploy to GitHub Pages
         uses: actions/deploy-pages@v4
+
 
     
     
