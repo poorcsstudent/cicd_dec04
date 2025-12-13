@@ -5,54 +5,18 @@ on:
     branches: [ master ]
   pull_request:
 
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
 jobs:
   run-tests:
     runs-on: ubuntu-latest
-    permissions:
-      pages: write
-      id-token: write
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.10"
-
-      - name: Install dependencies
-        run: |
-          pip install -r requirements.txt
-
-      - name: Run basic tests
-        run: pytest -q
-
-      - name: Run tests with coverage
-        run: |
-          pytest -q \
-            --cov=. \
-            --cov-report=term \
-            --cov-report=xml \
-            --cov-report=html \
-
-      - name: Prepare the webpage
-        run: |
-          mkdir sites
-          mv htmlcov sites/
-          mv coverage.xml sites/
-
-      - name: upload the artifacts
-        uses: actions/upload-pages-artifact@v4
-        with:
-          path: ./sites
-
-  Deploy:
-    runs-on: ubuntu-latest
-    permissions:
-      pages: write
-      id-token: write
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -67,19 +31,34 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run tests and generate coverage
+      - name: Run tests (quick)
+        run: pytest -q
+
+  Deploy:
+    needs: run-tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run tests and generate coverage HTML
         run: |
           pytest -q --cov=. --cov-report=term --cov-report=xml --cov-report=html
 
-      - name: Upload Pages artifact
+      - name: Upload Pages artifact (htmlcov)
         uses: actions/upload-pages-artifact@v3
         with:
           path: htmlcov
 
       - name: Deploy to GitHub Pages
         uses: actions/deploy-pages@v4
-
-
-
-    
-    
